@@ -416,6 +416,7 @@ void PasswordFile::newsalt(int ns)
 
 void PasswordFile::dump_crendentials()
 {
+    if(EncryptionType::NONE == this->security){
     if (DataStructureType::LINKEDLIST == this->option)
     {
         for (auto it = credentials_list.begin(); it != credentials_list.end(); it++)
@@ -445,6 +446,40 @@ void PasswordFile::dump_crendentials()
             it++;
             cout << *it << endl;
         }
+    }
+    }
+    else
+    {
+    if (DataStructureType::LINKEDLIST == this->option)
+    {
+        for (auto it = credentials_list.begin(); it != credentials_list.end(); it++)
+        {
+            cout << decrypt(it->front()) << " " << decrypt(it->back()) << endl;
+        }
+    }
+    if (DataStructureType::HASHMAP == this->option)
+    {
+        for (auto it = credentials.begin(); it != credentials.end(); it++)
+        {
+            cout << decrypt(it->first) << " " << decrypt(it->second) << endl;
+        }
+    }
+    if (DataStructureType::PARALLEL_VECTORS == this->option)
+    {
+        for (int i = 0; i < user.size(); i++)
+        {
+            cout << decrypt(user[i]) << " " << decrypt(password[i]) << endl;
+        }
+    }
+    if (DataStructureType::VECTOR == this->option)
+    {
+        for (auto it = credential_vector.begin(); it != credential_vector.end(); it++)
+        {
+            cout << decrypt(*it) << " ";
+            it++;
+            cout << decrypt(*it) << endl;
+        }
+    }
     }
 }
 
@@ -549,6 +584,7 @@ bool PasswordFile::checkpw(string user, string password)
 
 PasswordFile::PasswordFile(PasswordFile &copy)
 {
+
     if (this != &copy)
     { // Check for self-assignment
         this->filename = copy.filename;
@@ -621,7 +657,7 @@ void PasswordFile::syncTimer()
 
             this->sync();
         }
-        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        std::this_thread::sleep_for(std::chrono::milliseconds(50));
     }
 }
 
@@ -632,4 +668,114 @@ void PasswordFile::syncTimer()
 void PasswordFile::sync_crendentials()
 {
     std::thread(&PasswordFile::syncTimer, this).detach();
+}
+
+//--------------------------------------------------------------------------------------
+// Delete password
+//--------------------------------------------------------------------------------------
+
+int PasswordFile::deletepw(string user)
+{
+    if(EncryptionType::NONE == this->security){
+    if (option == DataStructureType::VECTOR)
+    {
+        for (size_t i = 0; i < credential_vector.size(); i += 2)
+        {
+            if (credential_vector[i] == user)
+            {
+                credential_vector.erase(credential_vector.begin() + i);
+                credential_vector.erase(credential_vector.begin() + i);
+                this->shouldUpdate = true;
+                return 0;
+            }
+        }
+    }
+    else if (option == DataStructureType::LINKEDLIST)
+    {
+        for (auto it = credentials_list.begin(); it != credentials_list.end(); it++)
+        {
+            if (it->front() == user)
+            {
+                credentials_list.erase(it);
+                this->shouldUpdate = true;
+                return 0;
+            }
+        }
+    }
+    else if (option == DataStructureType::HASHMAP)
+    {
+        if (credentials.find(user) != credentials.end())
+        {
+            credentials.erase(user);
+            this->shouldUpdate = true;
+            return 0;
+        }
+    }
+    else if (option == DataStructureType::PARALLEL_VECTORS)
+    {
+        for (size_t i = 0; i < this->user.size(); i++)
+        {
+            if (this->user[i] == user)
+            {
+                this->user.erase(this->user.begin() + i);
+                this->password.erase(this->password.begin() + i);
+                this->shouldUpdate = true;
+                return 0;
+            }
+        }
+    }
+    }
+    else
+    {
+    if (option == DataStructureType::VECTOR)
+    {
+        for (size_t i = 0; i < credential_vector.size(); i += 2)
+        {
+            if (decrypt(credential_vector[i]) == user)
+            {
+                credential_vector.erase(credential_vector.begin() + i);
+                credential_vector.erase(credential_vector.begin() + i);
+                this->shouldUpdate = true;
+                return 0;
+            }
+        }
+    }
+    else if (option == DataStructureType::LINKEDLIST)
+    {
+        for (auto it = credentials_list.begin(); it != credentials_list.end(); it++)
+        {
+            if (it->front() == decrypt(user))
+            {
+                credentials_list.erase(it);
+                this->shouldUpdate = true;
+                return 0;
+            }
+        }
+    }
+    else if (option == DataStructureType::HASHMAP)
+    {
+        if (credentials.find(decrypt(user)) != credentials.end())
+        {
+            credentials.erase(user);
+            this->shouldUpdate = true;
+            return 0;
+        }
+    }
+    else if (option == DataStructureType::PARALLEL_VECTORS)
+    {
+        for (size_t i = 0; i < this->user.size(); i++)
+        {
+            if (this->decrypt(this->user[i]) == user)
+            {
+                
+                this->user.erase(this->user.begin() + i);
+                this->password.erase(this->password.begin() + i);
+                this->shouldUpdate = true;
+                return 0;
+            }
+        }
+    }
+    }
+    
+    return -1;
 }

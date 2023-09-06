@@ -37,7 +37,8 @@ public:
     bool checkpw(string user, string passwd);                                         // returns true if user exists and password matches
     static void newsalt(int ns);
     void dump_crendentials();
-    void sync_crendentials();                                                         //starts a thread to periodically update the credentials 
+    void sync_crendentials();  
+    int deletepw(string user);                                                       //starts a thread to periodically update the credentials 
 private:
     bool shouldUpdate;
     void syncTimer();

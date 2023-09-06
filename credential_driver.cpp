@@ -4,6 +4,8 @@
 
 PasswordFile &constructor_test(DataStructureType type, EncryptionType option); // test prototypes
 void addpw_test(PasswordFile &credential_handler, size_t start, size_t end);
+void runtime_input(PasswordFile &test, string input);
+void spacer();
 
 //--------------------------------------------------------------------------------------
 // driver
@@ -15,48 +17,8 @@ int main()
     auto test = constructor_test(DataStructureType::PARALLEL_VECTORS, EncryptionType::NONE);
     test.sync_crendentials();
     addpw_test(test, 0, 1);
-    cout << test.checkpw("testUsername0", "testPassword0");
     string input;
-    while (true)
-    {
-        std::cout << "Enter a username and password separated by a space (or 'exit' to quit): ";
-        getline(std::cin, input);
-
-        if (input == "exit")
-        {
-            break; // Exit the loop if the user enters 'exit'
-        }
-        if (input == "verify")
-        {
-            cout << "Enter a username and password separated by a space to verify (or 'exit' to quit): ";
-            getline(std::cin, input);
-            size_t spacePos = input.find(' ');
-            if (spacePos != std::string::npos)
-            {
-                std::string username = input.substr(0, spacePos);
-                std::string password = input.substr(spacePos + 1);
-                bool status = test.checkpw(username, password);
-                cout << "The password is question is " << (status ? "valid" : "invalid") << endl;
-            }
-            }
-        else{
-        // Split the input into username and password
-        size_t spacePos = input.find(' ');
-        if (spacePos != std::string::npos)
-        {
-            std::string username = input.substr(0, spacePos);
-            std::string password = input.substr(spacePos + 1);
-
-            test.addpw(username, password);
-            // Process username and password here
-            std::cout << "Username: " << username << ", Password: " << password << std::endl;
-        }
-        else
-        {
-            std::cout << "Invalid input. Please enter a username and password separated by a space." << std::endl;
-        }
-    }
-    }
+    runtime_input(test, input);
 
     return 0;
 }
@@ -100,5 +62,96 @@ void addpw_test(PasswordFile &credential_handler, size_t start_index, size_t end
     cout << "Addpw Test" << endl;
     cout << endl;
     cout << "execution duration: " << duration << "ms" << endl;
+    cout << endl;
+}
+
+void runtime_input(PasswordFile &test, string input)
+{
+    while(true){
+    std::cout << "Enter command option: (insert, delete, display, verify, exit): ";
+    getline(std::cin, input);
+    spacer();
+
+    if (input == "exit")
+    {
+        cout << "exiting..." << endl;
+        break; // Exit the loop if the user enters 'exit'
+    }
+    if (input == "verify")
+    {
+        cout << "Enter a username and password separated by a space to verify: ";
+        getline(std::cin, input);
+        size_t spacePos = input.find(' ');
+        if (spacePos != std::string::npos)
+        {
+            std::string username = input.substr(0, spacePos);
+            std::string password = input.substr(spacePos + 1);
+            bool status = test.checkpw(username, password);
+            cout << "The password is question is " << (status ? "valid" : "invalid") << endl;
+            spacer();
+        }
+    }
+    if (input == "display")
+    {
+        test.dump_crendentials();spacer();
+    }
+    if(input == "modify"){
+        cout << "Enter a username and password separated by a space to modify: ";
+        getline(std::cin, input);
+        size_t spacePos = input.find(' ');
+        if (spacePos != std::string::npos)
+        {
+            std::string username = input.substr(0, spacePos);
+            std::string password = input.substr(spacePos + 1);
+            if(test.deletepw(username) != -1){
+                cout << "Enter new username and password separated by a space to modify: ";
+                getline(std::cin, input);
+                size_t spacePos = input.find(' ');
+                if (spacePos != std::string::npos)
+                {
+                    std::string username = input.substr(0, spacePos);
+                    std::string password = input.substr(spacePos + 1);
+                    test.addpw(username, password);
+                    cout << "password modified" << endl;
+                    spacer();
+                }
+            }
+        }
+    }
+    if(input == "delete"){
+        cout << "Enter a username of user to delete: ";
+
+        getline(std::cin, input);
+        size_t spacePos = input.find(' ');
+        std::string username = input.substr(0, spacePos);
+        test.deletepw(username);
+        spacer();
+    }
+    if(input == "insert")
+    {
+        cout << "Enter a username and password separated by a space to insert: ";
+        getline(std::cin, input);
+        // Split the input into username and password
+        size_t spacePos = input.find(' ');
+        if (spacePos != std::string::npos)
+        {
+            std::string username = input.substr(0, spacePos);
+            std::string password = input.substr(spacePos + 1);
+
+            test.addpw(username, password);
+            // Process username and password here
+            std::cout << "Username: " << username << ", Password: " << password << std::endl;
+            spacer();
+        }
+        else
+        {
+            std::cout << "Invalid input. Please enter a username and password separated by a space." << std::endl;
+            spacer();
+        }
+    }
+    }
+}
+
+void spacer() {
     cout << endl;
 }
